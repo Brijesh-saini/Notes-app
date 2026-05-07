@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Notes App</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    input {
+      padding: 10px;
+      width: 300px;
+    }
+
+    button {
+      padding: 10px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: white;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+    }
+
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Notes App</h1>
+
+<input
+  type="text"
+  id="noteInput"
+  placeholder="Write a note"
+/>
+
+<button onclick="addNote()">Add Note</button>
+
+<p id="status"></p>
+
+<ul id="notesList"></ul>
+
+<script>
+
+const API = "";
+
+function setStatus(message, success=false) {
+
+  const status = document.getElementById("status");
+
+  status.innerText = message;
+
+  status.style.color = success ? "green" : "red";
+}
+
+async function fetchNotes() {
+
+  try {
+
+    const res = await fetch(API + "/notes");
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch notes");
+    }
+
+    const data = await res.json();
+
+    const list = document.getElementById("notesList");
+
+    list.innerHTML = "";
+
+    data.forEach(note => {
+
+      const li = document.createElement("li");
+
+      li.innerHTML =
+        note.content +
+        ` <button onclick="deleteNote(${note.id})">Delete</button>`;
+
+      list.appendChild(li);
+
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    setStatus("Error loading notes");
+
+  }
+}
+
+async function addNote() {
+
+  try {
+
+    const note = document.getElementById("noteInput").value;
+
+    if (!note) {
+
+      setStatus("Please enter a note");
+
+      return;
+    }
+
+    const res = await fetch(API + "/notes", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        content: note
+      })
+
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to add note");
+    }
+
+    document.getElementById("noteInput").value = "";
+
+    setStatus("Note added successfully", true);
+
+    fetchNotes();
+
+  } catch (err) {
+
+    console.error(err);
+
+    setStatus("Error adding note");
+
+  }
+}
+
+async function deleteNote(id) {
+
+  try {
+
+    const res = await fetch(API + "/notes/" + id, {
+
+      method: "DELETE"
+
+    });
+
+    if (!res.ok) {
+      throw new Error("Delete failed");
+    }
+
+    setStatus("Note deleted", true);
+
+    fetchNotes();
+
+  } catch (err) {
+
+    console.error(err);
+
+    setStatus("Error deleting note");
+
+  }
+}
+
+fetchNotes();
+
+</script>
+
+</body>
+</html>
+ubuntu@ip-11-0-1-16:/var/www/html$ 
